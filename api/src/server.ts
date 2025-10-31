@@ -1,13 +1,14 @@
+import { fastifyCors } from '@fastify/cors'
+import { fastifySwagger } from '@fastify/swagger'
+import ScalarApiReference from '@scalar/fastify-api-reference'
 import { fastify } from 'fastify'
 import {
+  jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
-  jsonSchemaTransform,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
-import { fastifySwagger } from '@fastify/swagger'
-import { fastifyCors } from '@fastify/cors'
-import ScalarApiReference from '@scalar/fastify-api-reference'
+import { env } from './env'
 import { listWebhooks } from './routes/list-webhooks'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
@@ -38,7 +39,7 @@ app.register(ScalarApiReference, {
 
 app.register(listWebhooks)
 
-app.listen({ port: 3333, host: '0.0.0.0' }, (err, address) => {
+app.listen({ port: env.PORT, host: '0.0.0.0' }, (err, address) => {
   if (err) {
     console.error(err)
     process.exit(1)
