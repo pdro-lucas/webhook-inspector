@@ -1,24 +1,54 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { formatDistanceToNow } from 'date-fns'
 import { Trash2Icon } from 'lucide-react'
 import { Checkbox } from './ui/checkbox'
 import { IconButton } from './ui/icon-button'
 
-export function WebhooksListItem() {
+interface WebhooksListItemProps {
+  webhook: {
+    id: string
+    method: string
+    pathName: string
+    createdAt: Date
+  }
+}
+
+export function WebhooksListItem({ webhook }: WebhooksListItemProps) {
+  const queryClient = useQueryClient()
+
+  const { mutate: deleteWebhook } = useMutation({
+    mutationFn: async (id: string) => {
+      await fetch(`http://localhost:3333/api/webhooks/${id}`, {
+        method: 'DELETE',
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['webhooks'],
+      })
+    },
+  })
+
   return (
     <div className="rounded-lg transition-colors duration-150 hover:bg-zinc-700/50 group">
       <div className="flex items-start gap-3 px-4 py-2.5">
         <Checkbox />
-        <Link to="/" className="flex flex-1 min-w-0 items-start gap-3">
+        <Link
+          to="/webhooks/$id"
+          params={{ id: webhook.id }}
+          className="flex flex-1 min-w-0 items-start gap-3"
+        >
           <span className="w-12 shrink-0 font-mono text-xs font-semibold text-zinc-300 text-right">
-            POST
+            {webhook.method}
           </span>
 
           <div className="flex-1 min-w-0">
             <p className="truncate text-zinc-200 leading-tight  text-xs font-mono ">
-              /video/status
+              {webhook.pathName}
             </p>
-            <p className="text-xs text-zinc-500 font-medium mt-1">
-              1 minute ago
+            <p className="text-xs truncate text-zinc-500 font-medium mt-1">
+              {formatDistanceToNow(webhook.createdAt, { addSuffix: true })}
             </p>
           </div>
         </Link>
@@ -26,6 +56,7 @@ export function WebhooksListItem() {
         <IconButton
           icon={<Trash2Icon className="size-3.5 text-zinc-400" />}
           className="opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
+          onClick={() => deleteWebhook(webhook.id)}
         />
       </div>
     </div>
